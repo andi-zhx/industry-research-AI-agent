@@ -1,1 +1,0 @@
-# industry-research-AI-agent
