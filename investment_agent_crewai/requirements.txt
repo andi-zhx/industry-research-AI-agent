@@ -1,7 +1,43 @@
+# CrewAI 核心依赖
 crewai[tools]
+crewai_tools
 langchain-openai
+langchain-community
+
+# 数据获取
 yfinance
+akshare
 duckduckgo-search
-python-dotenv
-shutil
+
+# 文档处理
+pypdf
+python-docx
+openpyxl
+
+# 向量数据库
+chromadb
 sentence-transformers
+
+# Web框架
+streamlit>=1.28.0
+fastapi
+uvicorn
+
+# 数据处理
+pandas
+numpy
+numpy-financial
+
+# 工具库
+python-dotenv
+pydantic>=2.0.0
+requests
+beautifulsoup4
+
+# 可视化（用于报告生成）
+plotly
+matplotlib
+
+# 其他
+tenacity
+httpx

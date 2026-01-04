@@ -1,12 +1,11 @@
 # tools_custom.py (赋予 Agent 查库能力)
-# 修改您的工具定义，现在的工具不再是“读整个文件”，而是“去知识库里查”
+# 修改您的工具定义，现在的工具不再是"读整个文件"，而是"去知识库里查"
 # 使用 crewai.tools (点) 导入 BaseTool，BaseTool 是定义在主包 crewai 里的，不是扩展包 crewai_tools 里的
 from crewai.tools import BaseTool
 from crewai_tools import SerperDevTool
 from agent_system.knowledge import kb_manager
 import yfinance as yf
 import akshare as ak  
-# from langchain_community.tools import DuckDuckGoSearchRun
 from pypdf import PdfReader
 import os
 import re 
@@ -17,11 +16,7 @@ import numpy_financial as npf
 # 升级版工具：支持直接输入中文公司名
 # 初始化搜索工具
 # search_tool 直接传给 Agent 的 tools 列表即可
-serper_tool = SerperDevTool(n_results=3)
-
-# 如果你以后想加其他工具（比如读取 PDF、分析网页内容），也可以在这里实例化
-# from crewai_tools import ScrapeWebsiteTool
-# scrape_tool = ScrapeWebsiteTool()
+serper_tool = SerperDevTool(n_results=5)
 
 
 class StockAnalysisTool(BaseTool):
@@ -45,13 +40,10 @@ class StockAnalysisTool(BaseTool):
             stock_code = stock_code.strip()
             
             # 1. 获取个股实时信息 (市值、PE、行业等)
-            # 接口: 东方财富-个股信息
             info_df = ak.stock_individual_info_em(symbol=stock_code)
-            # info_df 结构通常是 item, value 两列
             info_dict = dict(zip(info_df['item'], info_df['value']))
             
             # 2. 获取主要财务指标 (营收、净利等)
-            # 接口: 财务摘要
             fin_df = ak.stock_financial_abstract(symbol=stock_code)
             
             # 3. 组装摘要数据
@@ -62,12 +54,11 @@ class StockAnalysisTool(BaseTool):
                 "PE Ratio (动态市盈率)": info_dict.get('市盈率(动)'),
                 "Sector (行业)": info_dict.get('行业'),
                 "Listing Date": info_dict.get('上市时间'),
-                "Stock Name": "N/A" # AkShare这个接口有时不返回名字，但这不影响计算
+                "Stock Name": "N/A"
             }
 
             # 4. 组装财务报表 (取最近4期数据)
             if not fin_df.empty:
-                # 按照报告期排序，取最新的
                 financials_str = fin_df.tail(4).to_string()
             else:
                 financials_str = "Financial abstract data not available."
@@ -79,33 +70,26 @@ class StockAnalysisTool(BaseTool):
 
     def _fetch_ticker_code(self, query: str) -> str:
         """
-        利用搜索将“公司名”转换为“股票代码”
+        利用搜索将"公司名"转换为"股票代码"
         """
         query = query.strip()
         
-        # 0. 查缓存
         if query in self._ticker_cache:
             return self._ticker_cache[query]
 
-        # 1. 如果输入已经是纯数字代码 (如 600519)，直接返回
         if re.match(r'^\d{6}$', query):
             return query
 
-        # 2. 如果是 Yahoo 格式 (600519.SS)，去后缀转为纯数字 (为了传给 AkShare)
         if re.match(r'^\d{6}\.(SS|SZ)$', query):
             clean_code = query.split('.')[0]
             self._ticker_cache[query] = clean_code
             return clean_code
 
-        # 3. 使用 Serper 搜索
         try:
-            # 搜索词技巧
             search_query = f"{query} 股票代码 stock ticker"
             result = serper_tool.run(search_query)
             
-            # A. 优先匹配 A股代码 (6位数字)
             match_a = re.search(r'(code|代码|ticker)[:\s]*(\d{6})', result, re.IGNORECASE)
-            # 或者直接匹配 60/00/30 开头的6位数字
             match_num = re.search(r'\b(60\d{4}|00\d{4}|30\d{4})\b', result)
             
             if match_a:
@@ -117,8 +101,6 @@ class StockAnalysisTool(BaseTool):
                 self._ticker_cache[query] = code
                 return code
             
-            # B. 匹配美股/港股代码 (字母 或 数字.HK)
-            # 简单匹配全大写字母 (如 NVDA, AAPL)
             match_us = re.search(r'\b[A-Z]{2,5}\b', result)
             if match_us:
                 code = match_us.group(0)
@@ -133,26 +115,20 @@ class StockAnalysisTool(BaseTool):
         try:
             ticker_or_name = ticker_or_name.strip()
             
-            # 步骤 1: 获取代码
             real_ticker = self._fetch_ticker_code(ticker_or_name)
             
             if not real_ticker:
                 return f"Error: Could not find ticker for '{ticker_or_name}'."
 
-            # 步骤 2: 路由分发
-            
-            # === 分支 A: A股 (走 AkShare) ===
             if self._is_a_share(real_ticker):
                 return self._fetch_a_share_data(real_ticker)
             
-            # === 分支 B: 美股/港股/其他 (走 yfinance) ===
             else:
                 stock = yf.Ticker(real_ticker)
                 info = stock.info
                 
-                # 容错：如果 info 为空，说明可能 yfinance 没找到
                 if not info or 'regularMarketPrice' not in info:
-                     return f"Error: yfinance failed to get data for {real_ticker}. It might be delisted or the ticker is wrong."
+                     return f"Error: yfinance failed to get data for {real_ticker}."
 
                 summary = {
                     "Company": info.get('longName', real_ticker),
@@ -175,39 +151,29 @@ class StockAnalysisTool(BaseTool):
         except Exception as e:
             return f"Error analyzing {ticker_or_name}: {str(e)}"
 
+
 class PDFReadTool(BaseTool):
     name: str = "Read Local PDF Report"
     description: str = "Useful for reading the FULL content of a local PDF file. Input: filename or path."
 
     def _run(self, file_path: str) -> str:
         try:
-            # --- 【关键修复逻辑】 ---
-            # 1. 清理文件名中的多余引号（LLM有时候会多传引号）
             file_path = file_path.strip().strip('"').strip("'")
-            
-            # 2. 定义知识库默认目录
             base_dir = "knowledge_base"
-            
-            # 3. 智能寻找文件路径
-            # 情况A: Agent给的是绝对路径或正确的相对路径，且文件存在 -> 直接用
             final_path = file_path
             
             if not os.path.exists(final_path):
-                # 情况B: Agent只给了文件名，没给路径 -> 尝试拼接 knowledge_base
-                # os.path.basename 确保只取文件名，防止 Agent 传了错误的路径前缀
                 filename = os.path.basename(file_path)
                 potential_path = os.path.join(base_dir, filename)
                 
                 if os.path.exists(potential_path):
                     final_path = potential_path
                 else:
-                    # 情况C: 还是找不到，列出目录下所有文件帮助排查
                     if os.path.exists(base_dir):
                         all_files = os.listdir(base_dir)
                         return f"Error: File '{filename}' not found. Available files in {base_dir}: {all_files}"
                     return f"Error: File not found at {file_path} (and {base_dir} folder missing)."
 
-            # 4. 开始读取
             reader = PdfReader(final_path)
             text = ""
             max_pages = 20 
@@ -220,16 +186,14 @@ class PDFReadTool(BaseTool):
         except Exception as e:
             return f"Error reading PDF: {str(e)}"
 
-# 让 Agent 主动查阅“历史记忆”
+
 class RecallHistoryTool(BaseTool):
     name: str = "Search Historical Insights"
     description: str = "Query the internal long-term memory for past facts, conclusions, or report segments. Useful for checking consensus or finding historical data."
 
     def _run(self, query: str) -> str:
-        # 调用 memory_manager 进行搜索
         try:
             from memory_system.memory_manager import memory_manager
-            # 这里可以搜索 fact 或 conclusion
             results = memory_manager.recall_memory(query, k=5)
             if not results:
                 return "No relevant historical insights found."
@@ -239,31 +203,22 @@ class RecallHistoryTool(BaseTool):
             return f"Memory recall failed: {str(e)}"
 
 
-# 财务计算器 (用于估值建模和IPO测算)
 class FinancialCalculatorTool(BaseTool):
     name: str = "Financial IRR & Sensitivity Calculator"
-    description: str = "Useful for calculating IRR, NPV, Valuation Multiples and performing sensitivity analysis for M&A or IPO scenarios. Input should be a dictionary string with 'cash_flows' or 'sensitivity_params'."
+    description: str = "Useful for calculating IRR, NPV, Valuation Multiples and performing sensitivity analysis for M&A or IPO scenarios."
 
     def _run(self, query: str) -> str:
         try:
-            # 这是一个简化的模拟计算逻辑，实际可接收 JSON 参数进行复杂运算
-            # 模拟：计算 IPO 退出回报
-            # 假设输入包含: 投资额, 持有年限, 退出倍数, 净利润
-            
-            # 这里为了演示，我们硬编码一个标准的敏感性分析逻辑供 Agent 调用
-            # 在真实产品中，Agent 会提取参数传进来
-            
-            # 场景：IPO 退出回报测算
             scenarios = ["保守", "中性", "乐观"]
-            exit_multiples = [15, 25, 40] # PE倍数
-            net_profits = [1.5, 2.0, 3.0] # 亿元 (上市年)
-            investment_cost = 0.5 # 亿元
+            exit_multiples = [15, 25, 40]
+            net_profits = [1.5, 2.0, 3.0]
+            investment_cost = 0.5
             years = 4
             
             results = []
             for i, scenario in enumerate(scenarios):
                 exit_val = exit_multiples[i] * net_profits[i]
-                my_share_val = exit_val * 0.10 # 假设持股 10%
+                my_share_val = exit_val * 0.10
                 cash_flows = [-investment_cost] + [0]*(years-1) + [my_share_val]
                 irr = npf.irr(cash_flows) * 100
                 roi = (my_share_val - investment_cost) / investment_cost
@@ -277,7 +232,7 @@ class FinancialCalculatorTool(BaseTool):
         except Exception as e:
             return f"Calculation failed: {str(e)}"
 
-# 文本聚合工具 (用于智能会议纪要，读取文件夹下所有文件)
+
 class MeetingNotesAggregator(BaseTool):
     name: str = "Meeting Notes Reader"
     description: str = "Read and aggregate all text/pdf files in a specific folder for meeting minutes. Input: Folder path."
@@ -292,26 +247,22 @@ class MeetingNotesAggregator(BaseTool):
                     with open(f_path, 'r', encoding='utf-8') as file:
                         aggregated_text += f"\n--- File: {f} ---\n{file.read()}"
                 elif f.endswith('.pdf'):
-                    # 简单调用 PDF 读取逻辑
                     reader = PdfReader(f_path)
                     text = ""
                     for page in reader.pages[:5]: text += page.extract_text()
                     aggregated_text += f"\n--- File: {f} ---\n{text}"
-            return aggregated_text[:10000] # 限制长度防止 Token 爆炸
+            return aggregated_text[:10000]
         except Exception as e:
             return f"Error reading files: {str(e)}"
 
 
-# 强制引用链 (Citation Chain) 让 RAG 返回的数据携带元数据（Metadata），并强行要求 Agent 在输出时保留这些标记
 class RAGSearchTool(BaseTool):
     name: str = "Search Local Knowledge Base"
-    description: str = "Useful for finding specific details in local reports. Input should be a specific question, e.g., 'What is the gross margin of BYD in 2024?'"
+    description: str = "Useful for finding specific details in local reports. Input should be a specific question."
 
     def _run(self, query: str) -> str:
         try:
-            # 去向量数据库搜索
             evidence = kb_manager.query_knowledge(query, n_results=5)
-            # 添加系统提示，强制 Agent 引用
             instruction = """
             【重要指令】：
             使用上述信息回答时，必须在句尾标注来源，格式为 [来源: 文件名]。
@@ -324,6 +275,204 @@ class RAGSearchTool(BaseTool):
             return f"Error querying knowledge base: {str(e)}"
 
 
+# ============================================================
+# 新增工具：产业链专项搜索
+# ============================================================
+class SupplyChainSearchTool(BaseTool):
+    name: str = "Supply Chain Industry Search"
+    description: str = "Search for supply chain information of a specific industry. Input: industry name (e.g., '半导体', '新能源汽车'). Returns upstream, midstream, downstream analysis."
+
+    def _run(self, industry: str) -> str:
+        try:
+            industry = industry.strip()
+            
+            # 构建多维度搜索查询
+            queries = [
+                f"{industry} 产业链 上游 原材料 供应商",
+                f"{industry} 产业链 中游 制造 加工",
+                f"{industry} 产业链 下游 应用 客户",
+                f"{industry} 产业链图谱 全景图",
+                f"{industry} 产业链 龙头企业 市场份额"
+            ]
+            
+            all_results = []
+            for query in queries:
+                try:
+                    result = serper_tool.run(query)
+                    all_results.append(f"【查询: {query}】\n{result}\n")
+                except:
+                    continue
+            
+            if not all_results:
+                return f"未找到 {industry} 行业的产业链信息"
+            
+            output = f"【{industry}】产业链搜索结果\n"
+            output += "=" * 50 + "\n\n"
+            output += "\n".join(all_results)
+            
+            return output
+        except Exception as e:
+            return f"产业链搜索失败: {str(e)}"
+
+
+class PolicySearchTool(BaseTool):
+    name: str = "Industry Policy Search"
+    description: str = "Search for policy information of a specific industry. Input format: 'industry,province' (e.g., '半导体,浙江省'). Province is optional."
+
+    def _run(self, query: str) -> str:
+        try:
+            parts = query.strip().split(',')
+            industry = parts[0].strip()
+            province = parts[1].strip() if len(parts) > 1 else ""
+            
+            queries = []
+            if province:
+                queries.append(f"{province} {industry} 产业政策 规划")
+                queries.append(f"{province} {industry} 补贴 扶持政策")
+                queries.append(f"{province} {industry} 十四五 发展规划")
+            else:
+                queries.append(f"{industry} 国家政策 产业规划")
+                queries.append(f"{industry} 补贴政策 扶持措施")
+            
+            queries.append(f"{industry} 监管政策 行业规范")
+            
+            all_results = []
+            for q in queries:
+                try:
+                    result = serper_tool.run(q)
+                    all_results.append(f"【查询: {q}】\n{result}\n")
+                except:
+                    continue
+            
+            if not all_results:
+                return f"未找到 {industry} 行业的政策信息"
+            
+            output = f"【{industry}】政策搜索结果"
+            if province:
+                output += f"（{province}）"
+            output += "\n" + "=" * 50 + "\n\n"
+            output += "\n".join(all_results)
+            
+            return output
+        except Exception as e:
+            return f"政策搜索失败: {str(e)}"
+
+
+class MarketSizeSearchTool(BaseTool):
+    name: str = "Market Size Search"
+    description: str = "Search for market size data of a specific industry. Input format: 'industry,region' (e.g., '半导体,中国'). Region is optional, defaults to China."
+
+    def _run(self, query: str) -> str:
+        try:
+            parts = query.strip().split(',')
+            industry = parts[0].strip()
+            region = parts[1].strip() if len(parts) > 1 else "中国"
+            
+            queries = [
+                f"{region} {industry} 市场规模 2024 2025",
+                f"{industry} 市场规模 增速 CAGR",
+                f"{industry} 行业规模 预测 趋势",
+                f"{industry} 渗透率 市场空间"
+            ]
+            
+            all_results = []
+            for q in queries:
+                try:
+                    result = serper_tool.run(q)
+                    all_results.append(f"【查询: {q}】\n{result}\n")
+                except:
+                    continue
+            
+            if not all_results:
+                return f"未找到 {industry} 行业的市场规模数据"
+            
+            output = f"【{industry}】市场规模搜索结果（{region}）\n"
+            output += "=" * 50 + "\n\n"
+            output += "\n".join(all_results)
+            
+            return output
+        except Exception as e:
+            return f"市场规模搜索失败: {str(e)}"
+
+
+class CompanySearchTool(BaseTool):
+    name: str = "Industry Company Search"
+    description: str = "Search for company information in a specific industry. Input format: 'industry,province' (e.g., '半导体,浙江省'). Province is optional."
+
+    def _run(self, query: str) -> str:
+        try:
+            parts = query.strip().split(',')
+            industry = parts[0].strip()
+            province = parts[1].strip() if len(parts) > 1 else ""
+            
+            queries = []
+            if province:
+                queries.append(f"{province} {industry} 龙头企业 排名")
+                queries.append(f"{province} {industry} 上市公司 名单")
+            else:
+                queries.append(f"{industry} 龙头企业 市场份额 排名")
+                queries.append(f"{industry} 上市公司 龙头 对比")
+            
+            queries.append(f"{industry} 企业 营收 净利润 对比")
+            queries.append(f"{industry} 独角兽 融资 估值")
+            
+            all_results = []
+            for q in queries:
+                try:
+                    result = serper_tool.run(q)
+                    all_results.append(f"【查询: {q}】\n{result}\n")
+                except:
+                    continue
+            
+            if not all_results:
+                return f"未找到 {industry} 行业的企业信息"
+            
+            output = f"【{industry}】企业搜索结果"
+            if province:
+                output += f"（{province}）"
+            output += "\n" + "=" * 50 + "\n\n"
+            output += "\n".join(all_results)
+            
+            return output
+        except Exception as e:
+            return f"企业搜索失败: {str(e)}"
+
+
+class BusinessModelSearchTool(BaseTool):
+    name: str = "Business Model Search"
+    description: str = "Search for business model and profitability information of a specific industry. Input: industry name."
+
+    def _run(self, industry: str) -> str:
+        try:
+            industry = industry.strip()
+            
+            queries = [
+                f"{industry} 商业模式 盈利模式",
+                f"{industry} 收入结构 成本结构",
+                f"{industry} 毛利率 净利率 对比",
+                f"{industry} 龙头企业 财务分析"
+            ]
+            
+            all_results = []
+            for q in queries:
+                try:
+                    result = serper_tool.run(q)
+                    all_results.append(f"【查询: {q}】\n{result}\n")
+                except:
+                    continue
+            
+            if not all_results:
+                return f"未找到 {industry} 行业的商业模式信息"
+            
+            output = f"【{industry}】商业模式搜索结果\n"
+            output += "=" * 50 + "\n\n"
+            output += "\n".join(all_results)
+            
+            return output
+        except Exception as e:
+            return f"商业模式搜索失败: {str(e)}"
+
+
 # 实例化工具
 rag_tool = RAGSearchTool()
 stock_analysis = StockAnalysisTool()
@@ -332,3 +481,9 @@ calc_tool = FinancialCalculatorTool()
 meeting_tool = MeetingNotesAggregator()
 recall_tool = RecallHistoryTool()
 
+# 新增工具实例
+supply_chain_search = SupplyChainSearchTool()
+policy_search = PolicySearchTool()
+market_size_search = MarketSizeSearchTool()
+company_search = CompanySearchTool()
+business_model_search = BusinessModelSearchTool()

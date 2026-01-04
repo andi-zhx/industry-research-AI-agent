@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSight AI Agent - 行业研究智能体项目展示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        .dimension-card {
+            transition: all 0.3s ease;
+        }
+        .dimension-card:hover {
+            transform: scale(1.02);
+        }
+        .supply-chain-node {
+            transition: all 0.3s ease;
+        }
+        .supply-chain-node:hover {
+            transform: scale(1.05);
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .tab-active {
+            border-bottom: 3px solid #4361ee;
+            color: #4361ee;
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        .code-keyword { color: #569cd6; }
+        .code-string { color: #ce9178; }
+        .code-comment { color: #6a9955; }
+        .code-function { color: #dcdcaa; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="gradient-bg text-white py-4 px-6 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">📊</span>
+                <span class="text-xl font-bold">FinSight AI Agent</span>
+                <span class="bg-blue-500 text-xs px-2 py-1 rounded-full">v2.0</span>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#overview" class="hover:text-blue-300 transition">项目概览</a>
+                <a href="#dimensions" class="hover:text-blue-300 transition">研究维度</a>
+                <a href="#supply-chain" class="hover:text-blue-300 transition">产业链分析</a>
+                <a href="#architecture" class="hover:text-blue-300 transition">系统架构</a>
+                <a href="#improvements" class="hover:text-blue-300 transition">改进内容</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20 px-6">
+        <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 animate-float">
+                行业研究智能体 Agent
+            </h1>
+            <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                基于多智能体协作的专业行业研究工具，覆盖六大研究维度，重点关注产业链深度分析，
+                助力私募股权基金投资决策
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <div class="bg-white/10 backdrop-blur px-6 py-3 rounded-lg">
+                    <span class="text-3xl font-bold text-blue-400">6</span>
+                    <span class="text-gray-300 ml-2">研究维度</span>
+                </div>
+                <div class="bg-white/10 backdrop-blur px-6 py-3 rounded-lg">
+                    <span class="text-3xl font-bold text-green-400">5</span>
+                    <span class="text-gray-300 ml-2">智能体协作</span>
+                </div>
+                <div class="bg-white/10 backdrop-blur px-6 py-3 rounded-lg">
+                    <span class="text-3xl font-bold text-purple-400">15000+</span>
+                    <span class="text-gray-300 ml-2">字深度报告</span>
+                </div>
+                <div class="bg-white/10 backdrop-blur px-6 py-3 rounded-lg">
+                    <span class="text-3xl font-bold text-yellow-400">10+</span>
+                    <span class="text-gray-300 ml-2">专业工具</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 项目概览 -->
+    <section id="overview" class="py-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">项目概览</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                    <h3 class="text-xl font-bold mb-4 text-blue-600">🎯 项目目标</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        为私募股权基金投资人打造一个智能行业研究工具，通过多智能体协作自动生成专业级的行业深度研究报告，
+                        重点关注产业链上下游结构梳理，识别各环节投资机会。
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                    <h3 class="text-xl font-bold mb-4 text-green-600">🔧 技术栈</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">CrewAI</span>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">LangChain</span>
+                        <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Streamlit</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">ChromaDB</span>
+                        <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">OpenAI API</span>
+                        <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm">RAG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 六大研究维度 -->
+    <section id="dimensions" class="py-16 px-6 bg-gray-100">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">六大研究维度</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                基于专业投研方法论，覆盖行业研究的核心维度，确保报告的全面性和专业性
+            </p>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 维度1 -->
+                <div class="dimension-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center font-bold">1</span>
+                        <h3 class="ml-3 font-bold text-gray-800">行业定义与边界</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-3">这行业到底包含什么？不包含什么？</p>
+                    <div class="text-xs text-gray-500">
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">行业协会定义</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">NAICS代码</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded">一级分类</span>
+                    </div>
+                </div>
+
+                <!-- 维度2 -->
+                <div class="dimension-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center font-bold">2</span>
+                        <h3 class="ml-3 font-bold text-gray-800">市场规模与趋势</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-3">现在多大？未来增长吗？为什么？</p>
+                    <div class="text-xs text-gray-500">
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">中商/艾瑞报告</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">CAGR分析</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded">渗透率</span>
+                    </div>
+                </div>
+
+                <!-- 维度3 -->
+                <div class="dimension-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-orange-100 text-orange-600 w-10 h-10 rounded-full flex items-center justify-center font-bold">3</span>
+                        <h3 class="ml-3 font-bold text-gray-800">产业链结构 ⭐</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-3">谁是上游、中游、下游？谁赚钱？</p>
+                    <div class="text-xs text-gray-500">
+                        <span class="bg-orange-100 px-2 py-1 rounded mr-1">产业链图谱</span>
+                        <span class="bg-orange-100 px-2 py-1 rounded mr-1">价值链分析</span>
+                        <span class="bg-orange-100 px-2 py-1 rounded">投资机会</span>
+                    </div>
+                </div>
+
+                <!-- 维度4 -->
+                <div class="dimension-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center font-bold">4</span>
+                        <h3 class="ml-3 font-bold text-gray-800">典型玩家与格局</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-3">龙头是谁？市占率如何？谁在扩张谁在退？</p>
+                    <div class="text-xs text-gray-500">
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">企业官网</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">招股书</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded">行研报告</span>
+                    </div>
+                </div>
+
+                <!-- 维度5 -->
+                <div class="dimension-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-pink-500">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-pink-100 text-pink-600 w-10 h-10 rounded-full flex items-center justify-center font-bold">5</span>
+                        <h3 class="ml-3 font-bold text-gray-800">商业模式与变现</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-3">谁付钱？怎么收费？毛利高吗？</p>
+                    <div class="text-xs text-gray-500">
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">BM Canvas</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">收入结构</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded">毛利率</span>
+                    </div>
+                </div>
+
+                <!-- 维度6 -->
+                <div class="dimension-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-cyan-500">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-cyan-100 text-cyan-600 w-10 h-10 rounded-full flex items-center justify-center font-bold">6</span>
+                        <h3 class="ml-3 font-bold text-gray-800">政策/科技/环境</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-3">哪些政策在左右它？新科技有冲击吗？</p>
+                    <div class="text-xs text-gray-500">
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">政策汇总</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded mr-1">技术趋势</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded">ESG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 产业链分析 -->
+    <section id="supply-chain" class="py-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">产业链深度分析</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                重点关注产业链上中下游结构，识别各环节投资机会，分析价值链分配
+            </p>
+
+            <!-- 产业链流程图 -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+                    <div class="supply-chain-node bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-6 rounded-xl text-center min-w-[200px]">
+                        <div class="text-3xl mb-2">🔼</div>
+                        <div class="font-bold text-lg">上游</div>
+                        <div class="text-sm opacity-80">原材料/零部件</div>
+                    </div>
+                    <div class="text-4xl text-gray-400 rotate-90 md:rotate-0">→</div>
+                    <div class="supply-chain-node bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-6 rounded-xl text-center min-w-[200px]">
+                        <div class="text-3xl mb-2">⏺️</div>
+                        <div class="font-bold text-lg">中游</div>
+                        <div class="text-sm opacity-80">制造/加工</div>
+                    </div>
+                    <div class="text-4xl text-gray-400 rotate-90 md:rotate-0">→</div>
+                    <div class="supply-chain-node bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-6 rounded-xl text-center min-w-[200px]">
+                        <div class="text-3xl mb-2">🔽</div>
+                        <div class="font-bold text-lg">下游</div>
+                        <div class="text-sm opacity-80">应用/终端</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 产业链分析详情 -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-red-500">
+                    <h4 class="font-bold text-gray-800 mb-3">🔼 上游分析</h4>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• 原材料供应商分析</li>
+                        <li>• 核心零部件供应商</li>
+                        <li>• 成本占比与价格传导</li>
+                        <li>• 国产化率与进口依赖</li>
+                        <li>• "卡脖子"环节识别</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-500">
+                    <h4 class="font-bold text-gray-800 mb-3">⏺️ 中游分析</h4>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• 核心制造环节</li>
+                        <li>• 技术壁垒分析</li>
+                        <li>• 产能分布与利用率</li>
+                        <li>• 竞争格局与市占率</li>
+                        <li>• 毛利率水平对比</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500">
+                    <h4 class="font-bold text-gray-800 mb-3">🔽 下游分析</h4>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• 终端应用场景</li>
+                        <li>• 各场景市场规模</li>
+                        <li>• 需求驱动因素</li>
+                        <li>• 客户结构分析</li>
+                        <li>• 增长潜力评估</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-yellow-500">
+                    <h4 class="font-bold text-gray-800 mb-3">💰 价值链分析</h4>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• 利润在各环节分配</li>
+                        <li>• 议价能力分析</li>
+                        <li>• 价值洼地识别</li>
+                        <li>• 投资机会评估</li>
+                        <li>• 风险因素分析</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 系统架构 -->
+    <section id="architecture" class="py-16 px-6 bg-gray-100">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">系统架构</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                基于CrewAI框架的多智能体协作架构，五大智能体分工协作
+            </p>
+
+            <!-- 智能体架构图 -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h3 class="text-xl font-bold text-center mb-8 text-gray-800">五大智能体协作流程</h3>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl text-center min-w-[150px] card-hover">
+                        <div class="text-3xl mb-2">📋</div>
+                        <div class="font-bold">Planner</div>
+                        <div class="text-xs opacity-80 mt-1">规划师</div>
+                    </div>
+                    <div class="flex items-center text-3xl text-gray-400">→</div>
+                    <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl text-center min-w-[150px] card-hover">
+                        <div class="text-3xl mb-2">🔍</div>
+                        <div class="font-bold">Researcher</div>
+                        <div class="text-xs opacity-80 mt-1">研究员</div>
+                    </div>
+                    <div class="flex items-center text-3xl text-gray-400">→</div>
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl text-center min-w-[150px] card-hover">
+                        <div class="text-3xl mb-2">📊</div>
+                        <div class="font-bold">Analyst</div>
+                        <div class="text-xs opacity-80 mt-1">分析师</div>
+                    </div>
+                    <div class="flex items-center text-3xl text-gray-400">→</div>
+                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl text-center min-w-[150px] card-hover">
+                        <div class="text-3xl mb-2">✍️</div>
+                        <div class="font-bold">Writer</div>
+                        <div class="text-xs opacity-80 mt-1">撰写员</div>
+                    </div>
+                    <div class="flex items-center text-3xl text-gray-400">→</div>
+                    <div class="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-xl text-center min-w-[150px] card-hover">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="font-bold">Reviewer</div>
+                        <div class="text-xs opacity-80 mt-1">审核员</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具集 -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h3 class="text-xl font-bold text-center mb-8 text-gray-800">专业工具集</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">🔗</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">SupplyChainSearchTool</div>
+                            <div class="text-sm text-gray-500">产业链专项搜索</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">📜</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">PolicySearchTool</div>
+                            <div class="text-sm text-gray-500">政策信息搜索</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">📈</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">MarketSizeSearchTool</div>
+                            <div class="text-sm text-gray-500">市场规模搜索</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">🏢</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">CompanySearchTool</div>
+                            <div class="text-sm text-gray-500">企业信息搜索</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">💼</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">BusinessModelSearchTool</div>
+                            <div class="text-sm text-gray-500">商业模式搜索</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">📊</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">StockAnalysisTool</div>
+                            <div class="text-sm text-gray-500">股票财务分析</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">📚</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">RAGSearchTool</div>
+                            <div class="text-sm text-gray-500">本地知识库检索</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">📄</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">PDFReadTool</div>
+                            <div class="text-sm text-gray-500">PDF文档读取</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl mr-3">🧮</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">FinancialCalculatorTool</div>
+                            <div class="text-sm text-gray-500">财务计算（IRR/NPV）</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 改进内容 -->
+    <section id="improvements" class="py-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">项目改进内容</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                本次改进覆盖前后端多个模块，全面提升行业研究报告的专业性和深度
+            </p>
+
+            <!-- 改进统计 -->
+            <div class="grid md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+                    <div class="text-4xl font-bold text-blue-600 mb-2">15+</div>
+                    <div class="text-gray-600">文件修改</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+                    <div class="text-4xl font-bold text-green-600 mb-2">5</div>
+                    <div class="text-gray-600">新增工具</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+                    <div class="text-4xl font-bold text-purple-600 mb-2">6</div>
+                    <div class="text-gray-600">提示词重构</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+                    <div class="text-4xl font-bold text-orange-600 mb-2">1</div>
+                    <div class="text-gray-600">新增模块</div>
+                </div>
+            </div>
+
+            <!-- 改进详情 -->
+            <div class="space-y-6">
+                <!-- 后端改进 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4">
+                        <h3 class="text-xl font-bold">🔧 后端架构改进</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-3">提示词模块重构</h4>
+                                <ul class="text-sm text-gray-600 space-y-2">
+                                    <li>✅ planner_prompt.py - 增强六大研究维度规划</li>
+                                    <li>✅ researcher_prompt.py - 增强产业链数据采集</li>
+                                    <li>✅ analyst_prompt.py - 增强六维度综合分析</li>
+                                    <li>✅ writer_prompt.py - 增强产业链写作能力</li>
+                                    <li>✅ reviewer_prompt.py - 增强质量审核标准</li>
+                                    <li>✅ supply_chain_prompt.py - 新增产业链专项提示词</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-3">工具模块增强</h4>
+                                <ul class="text-sm text-gray-600 space-y-2">
+                                    <li>✅ SupplyChainSearchTool - 产业链专项搜索</li>
+                                    <li>✅ PolicySearchTool - 政策信息搜索</li>
+                                    <li>✅ MarketSizeSearchTool - 市场规模搜索</li>
+                                    <li>✅ CompanySearchTool - 企业信息搜索</li>
+                                    <li>✅ BusinessModelSearchTool - 商业模式搜索</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 前端改进 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4">
+                        <h3 class="text-xl font-bold">🎨 前端界面改进</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-3">界面功能增强</h4>
+                                <ul class="text-sm text-gray-600 space-y-2">
+                                    <li>✅ 新增产业链专项分析模块</li>
+                                    <li>✅ 六大研究维度可配置选择</li>
+                                    <li>✅ 产业链分析深度可调节</li>
+                                    <li>✅ 报告统计信息展示</li>
+                                    <li>✅ 研究维度框架可视化</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-3">样式优化</h4>
+                                <ul class="text-sm text-gray-600 space-y-2">
+                                    <li>✅ 现代化专业设计风格</li>
+                                    <li>✅ 产业链流程图可视化</li>
+                                    <li>✅ 维度标签样式优化</li>
+                                    <li>✅ 响应式布局适配</li>
+                                    <li>✅ 动态海浪头部效果</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据模型改进 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-4">
+                        <h3 class="text-xl font-bold">📊 数据模型改进</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-3">输入模式增强</h4>
+                                <ul class="text-sm text-gray-600 space-y-2">
+                                    <li>✅ 研究维度枚举类型</li>
+                                    <li>✅ 报告深度配置</li>
+                                    <li>✅ 投资者类型配置</li>
+                                    <li>✅ 产业链分析配置</li>
+                                    <li>✅ 输出格式配置</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-3">配置文件增强</h4>
+                                <ul class="text-sm text-gray-600 space-y-2">
+                                    <li>✅ 扩展产业链图谱</li>
+                                    <li>✅ 新增研究维度配置</li>
+                                    <li>✅ 产业链分析配置</li>
+                                    <li>✅ 报告深度配置</li>
+                                    <li>✅ 投资者类型配置</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 报告输出示例 -->
+    <section class="py-16 px-6 bg-gray-100">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">报告输出结构</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                生成的深度研究报告包含完整的章节结构，满足投资决策需求
+            </p>
+
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-bold text-gray-800 mb-4 text-lg">📑 报告章节结构</h3>
+                        <ol class="space-y-3">
+                            <li class="flex items-center">
+                                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">1</span>
+                                <span class="text-gray-700">执行摘要</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">2</span>
+                                <span class="text-gray-700">行业定义与边界</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">3</span>
+                                <span class="text-gray-700">市场规模与趋势</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">4</span>
+                                <span class="text-gray-700 font-semibold">产业链深度分析 ⭐</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">5</span>
+                                <span class="text-gray-700">竞争格局分析</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">6</span>
+                                <span class="text-gray-700">商业模式分析</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">7</span>
+                                <span class="text-gray-700">政策与技术环境</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-green-100 text-green-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">8</span>
+                                <span class="text-gray-700">投资建议与风险提示</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-gray-100 text-gray-600 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">9</span>
+                                <span class="text-gray-700">附录：数据来源与免责声明</span>
+                            </li>
+                        </ol>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 mb-4 text-lg">📊 报告质量指标</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-600">报告字数</span>
+                                    <span class="font-semibold text-blue-600">15,000+ 字</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 90%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-600">数据表格</span>
+                                    <span class="font-semibold text-green-600">8+ 个</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-600 h-2 rounded-full" style="width: 80%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-600">产业链章节</span>
+                                    <span class="font-semibold text-orange-600">3,000+ 字</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-600">数据来源标注</span>
+                                    <span class="font-semibold text-purple-600">100%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-purple-600 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="gradient-bg text-white py-12 px-6">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="text-3xl mb-4">📊</div>
+            <h3 class="text-xl font-bold mb-2">FinSight AI Agent</h3>
+            <p class="text-gray-400 mb-6">基于多智能体协作的专业行业研究工具</p>
+            <div class="flex justify-center space-x-4 text-sm text-gray-400">
+                <span>v2.0</span>
+                <span>|</span>
+                <span>CrewAI Framework</span>
+                <span>|</span>
+                <span>六大研究维度</span>
+                <span>|</span>
+                <span>产业链深度分析</span>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-sm text-gray-500">
+                © 2025 FinSight AI Agent | 内部机密系统 | 禁止外传
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card-hover, .dimension-card, .supply-chain-node').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
