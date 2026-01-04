@@ -1,0 +1,6 @@
+investment_agent_crewai/
+├── config/
+│   ├── __init__.py
+│   ├── runtime_env.py      ← 放系统级环境变量
+│   ├── network.py          ← 放代理 & 网络
+│   └── llm.py              ← 放 deepseek_llm

@@ -1,0 +1,7 @@
+crewai[tools]
+langchain-openai
+yfinance
+duckduckgo-search
+python-dotenv
+shutil
+sentence-transformers

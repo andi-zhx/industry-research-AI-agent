@@ -1,0 +1,217 @@
+卷 Data 的文件夹 PATH 列表
+卷序列号为 9A67-B3E2
+D:.
+│  .env
+│  app.py
+│  app_config.py
+│  main.py
+│  project_tree.txt
+│  requirements.txt
+│  ui_styles.py
+│  
+├─.ipynb_checkpoints
+│      app-checkpoint.py
+│      app_config-checkpoint.py
+│      knowledge_engine-checkpoint.py
+│      main-checkpoint.py
+│      requirements-checkpoint.txt
+│      tools_custom-checkpoint.py
+│      ui_styles-checkpoint.py
+│      程序调试运行-checkpoint.ipynb
+│      
+├─agent_system
+│  ├─knowledge
+│  │  │  knowledge_engine.py
+│  │  │  __init__.py
+│  │  │  
+│  │  ├─.ipynb_checkpoints
+│  │  │      knowledge_engine-checkpoint.py
+│  │  │      __init__-checkpoint.py
+│  │  │      
+│  │  └─__pycache__
+│  │          knowledge_engine.cpython-312.pyc
+│  │          __init__.cpython-312.pyc
+│  │          
+│  ├─postprocess
+│  │  │  analyst_parser.py
+│  │  │  base_parser.py
+│  │  │  planner_parser.py
+│  │  │  researcher_parser.py
+│  │  │  __init__.py
+│  │  │  
+│  │  ├─.ipynb_checkpoints
+│  │  │      analyst_parser-checkpoint.py
+│  │  │      base_parser-checkpoint.py
+│  │  │      planner_parser-checkpoint.py
+│  │  │      researcher_parser-checkpoint.py
+│  │  │      __init__-checkpoint.py
+│  │  │      
+│  │  └─__pycache__
+│  │          analyst_parser.cpython-312.pyc
+│  │          base_parser.cpython-312.pyc
+│  │          planner_parser.cpython-312.pyc
+│  │          researcher_parser.cpython-312.pyc
+│  │          __init__.cpython-312.pyc
+│  │          
+│  ├─prompts
+│  │  │  analyst_prompt.py
+│  │  │  planner_prompt.py
+│  │  │  researcher_prompt.py
+│  │  │  reviewer_prompt.py
+│  │  │  writer_prompt.py
+│  │  │  __init__.py
+│  │  │  
+│  │  ├─.ipynb_checkpoints
+│  │  │      analyst_prompt-checkpoint.py
+│  │  │      planner_prompt-checkpoint.py
+│  │  │      researcher_prompt-checkpoint.py
+│  │  │      reviewer_prompt-checkpoint.py
+│  │  │      writer_prompt-checkpoint.py
+│  │  │      __init__-checkpoint.py
+│  │  │      
+│  │  └─__pycache__
+│  │          analyst.cpython-312.pyc
+│  │          analyst_prompt.cpython-312.pyc
+│  │          planner.cpython-312.pyc
+│  │          planner_prompt.cpython-312.pyc
+│  │          researcher.cpython-312.pyc
+│  │          researcher_prompt.cpython-312.pyc
+│  │          reviewer.cpython-312.pyc
+│  │          reviewer_prompt.cpython-312.pyc
+│  │          writer.cpython-312.pyc
+│  │          writer_prompt.cpython-312.pyc
+│  │          __init__.cpython-312.pyc
+│  │          
+│  ├─schemas
+│  │  │  research_input.py
+│  │  │  
+│  │  ├─.ipynb_checkpoints
+│  │  │      research_input-checkpoint.py
+│  │  │      
+│  │  └─__pycache__
+│  │          research_input.cpython-312.pyc
+│  │          
+│  ├─tools
+│  │  │  tools_custom.py
+│  │  │  __init__.py
+│  │  │  
+│  │  ├─.ipynb_checkpoints
+│  │  │      tools_custom-checkpoint.py
+│  │  │      __init__-checkpoint.py
+│  │  │      
+│  │  └─__pycache__
+│  │          tools_custom.cpython-312.pyc
+│  │          __init__.cpython-312.pyc
+│  │          
+│  └─workflows
+│      │  industry_research.py
+│      │  industry_research_other.py
+│      │  
+│      ├─.ipynb_checkpoints
+│      │      industry_research-checkpoint.py
+│      │      industry_research_other-checkpoint.py
+│      │      
+│      └─__pycache__
+│              industry_research.cpython-312.pyc
+│              
+├─chroma_db
+│      chroma.sqlite3
+│      
+├─config
+│  │  llm.py
+│  │  network.py
+│  │  runtime_env.py
+│  │  __init__.py
+│  │  说明.txt
+│  │  
+│  ├─.ipynb_checkpoints
+│  │      llm-checkpoint.py
+│  │      network-checkpoint.py
+│  │      runtime_env-checkpoint.py
+│  │      __init__-checkpoint.py
+│  │      说明-checkpoint.txt
+│  │      
+│  └─__pycache__
+│          llm.cpython-312.pyc
+│          network.cpython-312.pyc
+│          runtime_env.cpython-312.pyc
+│          __init__.cpython-312.pyc
+│          
+├─ingestion
+│  │  pdf_ingest.py
+│  │  
+│  ├─.ipynb_checkpoints
+│  │      pdf_ingest-checkpoint.py
+│  │      
+│  └─__pycache__
+│          pdf_ingest.cpython-312.pyc
+│          
+├─knowledge_base
+│  │  AI专题Agent-智能体基建厚积薄发，商业化应用曙光乍现-西南证券.pdf
+│  │  
+│  ├─meetings
+│  └─vector_store
+│          chroma.sqlite3
+│          
+├─memory_system
+│  │  memory_manager.py
+│  │  
+│  ├─.ipynb_checkpoints
+│  │      memory_manager-checkpoint.py
+│  │      
+│  ├─vector_store
+│  │  │  chroma_client.py
+│  │  │  
+│  │  ├─.ipynb_checkpoints
+│  │  │      chroma_client-checkpoint.py
+│  │  │      
+│  │  └─__pycache__
+│  │          chroma_client.cpython-312.pyc
+│  │          
+│  └─__pycache__
+│          memory_manager.cpython-312.pyc
+│          
+├─output
+│  │  2025_上海市_半导体_行业研究报告_20251229.md
+│  │  2025_上海市_?? 新一代信息技术 - 人工智能 (AI)_研报_20251223.md
+│  │  2025_山东省_人工智能行业_分析报告_20251220.ipynb
+│  │  2025_浙江省_人工智能_行业研究报告_20251226.md
+│  │  2025_浙江省_人工智能_行业研究报告_20251230.md
+│  │  2025_浙江省_人工智能行业_分析报告_20251219.ipynb
+│  │  2025_浙江省_低空经济_行业研究报告_20251225.md
+│  │  Untitled.ipynb
+│  │  山东省_医药行业_研报.md
+│  │  浙江省医药产业链.ipynb
+│  │  
+│  └─.ipynb_checkpoints
+│          2025_上海市_半导体_行业研究报告_20251229-checkpoint.md
+│          2025_上海市_?? 新一代信息技术 - 人工智能 (AI)_研报_20251223-checkpoint.md
+│          2025_山东省_人工智能行业_分析报告_20251220-checkpoint.ipynb
+│          2025_山东省_人工智能行业_分析报告_20251220-checkpoint.md
+│          2025_浙江省_人工智能_行业研究报告_20251226-checkpoint.md
+│          2025_浙江省_人工智能_行业研究报告_20251230-checkpoint.md
+│          2025_浙江省_人工智能行业_分析报告_20251219-checkpoint.ipynb
+│          2025_浙江省_人工智能行业_分析报告_20251219-checkpoint.md
+│          2025_浙江省_人工智能行业_分析报告_20251219-checkpoint.pdf
+│          2025_浙江省_低空经济_行业研究报告_20251225-checkpoint.md
+│          2025_浙江省_新能源汽车 - 中游-checkpoint
+│          Untitled-checkpoint.ipynb
+│          浙江省_医药产业链_研报-checkpoint.md
+│          浙江省医药产业链-checkpoint.ipynb
+│          
+├─rag
+│  │  retriever.py
+│  │  
+│  ├─.ipynb_checkpoints
+│  │      retriever-checkpoint.py
+│  │      
+│  └─__pycache__
+│          retriever.cpython-312.pyc
+│          
+└─__pycache__
+        app_config.cpython-312.pyc
+        knowledge_engine.cpython-312.pyc
+        main.cpython-312.pyc
+        tools_custom.cpython-312.pyc
+        ui_styles.cpython-312.pyc
+        
