@@ -5,7 +5,7 @@ import os
 
 def setup_network():
     # 1. 设置本地代理地址 (请确保你的VPN软件确实监听在这个端口)，（给 Serper / Google 用）
-    proxy_url = "http://127.0.0.1:15236"
+    proxy_url = "你的本地代理地址"
 
     # 2. 启用代理 (主要为了 Serper 和其他海外 API)
     os.environ["http_proxy"] = proxy_url
