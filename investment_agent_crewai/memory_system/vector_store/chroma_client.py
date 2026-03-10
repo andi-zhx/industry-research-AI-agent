@@ -40,3 +40,15 @@ class ChromaVectorStore:
 
     def similarity_search_with_score(self, query, k=5, where=None):
         return self.db.similarity_search_with_score(query=query, k=k, filter=where)
+        self.db.add_texts(
+            texts=texts,
+            metadatas=metadatas
+        )
+        # self.db.persist()  # 新版会自动保存，调用它会报错，所以这里注销调
+
+    def similarity_search_with_score(self, query, k=5, where=None):
+        return self.db.similarity_search_with_score(
+            query=query,
+            k=k,
+            filter=where
+        )

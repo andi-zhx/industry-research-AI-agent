@@ -15,6 +15,10 @@ PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "../../"))
 CHROMA_DATA_PATH = os.path.join(PROJECT_ROOT, "chroma_db")
 os.makedirs(CHROMA_DATA_PATH, exist_ok=True)
 
+client = chromadb.PersistentClient(path=CHROMA_DATA_PATH)
+emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="BAAI/bge-m3")
+collection = client.get_or_create_collection(name="industry_research_db", embedding_function=emb_fn)
+
 
 class KnowledgeBaseManager:
     """
@@ -157,11 +161,19 @@ class KnowledgeBaseManager:
         current_query = query
 
         for _ in range(max_rounds):
+        for round_idx in range(max_rounds):
             evidence = self.query_knowledge(current_query, n_results=n_results)
             history.append((current_query, evidence))
 
             if evidence and len(evidence) > 400:
                 break
+
+            constraints = re.findall(r"\d{4}|市场规模|营收|利润|政策|上游|中游|下游", query)
+            if constraints:
+                current_query = f"{query} {' '.join(constraints)}"
+            else:
+                current_query = f"{query} 行业数据 龙头企业 政策"
+
 
             constraints = re.findall(r"\d{4}|市场规模|营收|利润|政策|上游|中游|下游", query)
             if constraints:
@@ -175,6 +187,11 @@ class KnowledgeBaseManager:
         return "\n\n".join(sections)
 
     def recommend_sync_strategy(self) -> Dict[str, str]:
+        """
+        最佳方案：上传时增量更新 + 每晚定时校验
+        - 上传触发：保证时效性（用户立刻可检索）
+        - 夜间任务：做去重、重分块、索引健康检查
+        """
         return {
             "recommended": "hybrid",
             "upload_time": "每次上传文件后，立即进行增量切分与索引更新",
