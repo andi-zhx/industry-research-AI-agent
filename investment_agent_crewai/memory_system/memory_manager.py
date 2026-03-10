@@ -1,82 +1,146 @@
 # memory_system/memory_manager.py
 
+from __future__ import annotations
+
 import datetime
+import re
+from typing import Callable, Dict, Any, List
+
 from ingestion.pdf_ingest import PDFIngestor
 from memory_system.vector_store.chroma_client import ChromaVectorStore
 from rag.retriever import VectorRetriever
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+
 class MemoryManager:
     """
     全维投研记忆系统
-    支持：PDF原文、Agent产出的事实、观点、结论、正文段落
+    支持：重要性筛选、时效性管理、长短期记忆协同
     """
 
-    def __init__(self, persist_dir: str):
+    def __init__(self, persist_dir: str, importance_judge: Callable[[str], int] | None = None):
         self.vector_store = ChromaVectorStore(persist_dir)
         self.retriever = VectorRetriever(self.vector_store)
         self.pdf_ingestor = PDFIngestor()
-        
-        # 不同的内容切分策略可能不同，这里暂用通用策略
-        self.splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        self.importance_judge = importance_judge
 
-    # ------------------ 存入 (Write) ------------------
+        self.splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        self.ttl_days_by_category = {
+            "fact": 365,
+            "opinion": 90,
+            "conclusion": 180,
+            "report_segment": 730,
+        }
+
+    def _estimate_importance(self, message: str) -> int:
+        """兜底评分：无LLM时通过启发式评估重要性（1-10）。"""
+        score = 4
+        if re.search(r"\d{4}|\d+%|\d+亿|\d+万", message):
+            score += 2
+        if any(k in message for k in ["结论", "建议", "风险", "投资", "政策", "市场规模"]):
+            score += 2
+        if len(message) > 120:
+            score += 1
+        return max(1, min(10, score))
+
+    def should_store_in_long_term(self, message: str, threshold: int = 7) -> bool:
+        if not message:
+            return False
+        try:
+            if self.importance_judge:
+                importance = int(self.importance_judge(message))
+            else:
+                importance = self._estimate_importance(message)
+        except Exception:
+            importance = self._estimate_importance(message)
+
+        return importance >= threshold
+
+    @staticmethod
+    def _iso_now() -> str:
+        return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    @staticmethod
+    def _build_expires_at(now_iso: str, ttl_days: int) -> str:
+        ts = datetime.datetime.fromisoformat(now_iso)
+        return (ts + datetime.timedelta(days=ttl_days)).isoformat()
 
     def save_insight(self, content: str, category: str, metadata: dict):
-        """
-        核心方法：存储 Agent 的产出
-        :param content: 文本内容
-        :param category: 'fact' | 'opinion' | 'conclusion' | 'report_segment'
-        :param metadata: {industry, year, province, focus, source_agent}
-        """
-        if not content: return
+        if not content:
+            return
 
-        # 自动补全元数据
+        if not self.should_store_in_long_term(content):
+            print("🧠 [Memory] 重要性不足，已跳过长期存储")
+            return
+
+        now_iso = self._iso_now()
+        ttl_days = self.ttl_days_by_category.get(category, 180)
+
         meta = metadata.copy()
-        meta.update({
-            "category": category,
-            "ingest_time": datetime.datetime.now().isoformat(),
-            "type": "agent_memory" # 区别于 pdf_file
-        })
+        meta.update(
+            {
+                "category": category,
+                "ingest_time": now_iso,
+                "expires_at": self._build_expires_at(now_iso, ttl_days),
+                "importance_threshold": 7,
+                "type": "agent_memory",
+            }
+        )
 
-        # 存入向量库
-        # 注意：如果是短结论，可以不切分直接存；长段落需要切分
-        if len(content) < 500:
-            chunks = [content]
-        else:
-            chunks = self.splitter.split_text(content)
-            
-        metadatas = [meta for _ in chunks]
-        self.vector_store.add_texts(chunks, metadatas)
+        chunks = [content] if len(content) < 500 else self.splitter.split_text(content)
+        enriched_metas = []
+        for i, chunk in enumerate(chunks):
+            chunk_meta = meta.copy()
+            chunk_meta["chunk_index"] = i
+            chunk_meta["raw_content"] = chunk
+            enriched_metas.append(chunk_meta)
+
+        self.vector_store.add_texts(chunks, enriched_metas)
         print(f"🧠 [Memory] 已存储 {len(chunks)} 条 {category} 记忆")
 
     def ingest_pdf(self, file_path: str, metadata: dict):
         raw_text = self.pdf_ingestor.ingest(file_path)
         chunks = self.splitter.split_text(raw_text)
-        metadatas = [metadata for _ in chunks]
+
+        now_iso = self._iso_now()
+        metadatas = []
+        for idx, chunk in enumerate(chunks):
+            m = metadata.copy()
+            m.update(
+                {
+                    "ingest_time": now_iso,
+                    "expires_at": self._build_expires_at(now_iso, 3650),
+                    "chunk_index": idx,
+                    "type": "pdf_file",
+                    "raw_content": chunk,
+                }
+            )
+            metadatas.append(m)
+
         self.vector_store.add_texts(chunks, metadatas)
 
-    # ------------------ 召回 (Read) ------------------
-
-    def recall_memory(self, query: str, category: str = None, k: int = 5):
-        """
-        精准召回：支持按 category 过滤
-        例如：Analyst 只想看之前的 'fact'，Writer 想看之前的 'conclusion'
-        """
-        # 注意：底层 ChromaClient 需要支持 where 过滤
-        # 这里假设您的 VectorRetriever 支持 filter 参数，如果不支持需修改底层
-        # 临时方案：先检索多一点，再在内存里过滤 (如果底层不支持 metadata 过滤)
-        results = self.retriever.retrieve(query, k=k * 2) 
-        
+    def recall_memory(self, query: str, category: str | None = None, k: int = 5) -> List[str]:
+        now = datetime.datetime.now(datetime.timezone.utc)
+        where: Dict[str, Any] | None = {"type": "agent_memory"}
         if category:
-            # 简单的内存过滤示例 (实际建议下推到数据库层)
-            # 假设 retrieve 返回的是 Document 对象或带 metadata 的字典
-            # 这里需要根据您实际的 retriever 返回结构调整
-            pass 
-            
-        return results
+            where["category"] = category
 
-# 全局单例
+        results = self.retriever.retrieve(query, k=k * 2, where=where)
+
+        valid_results = []
+        for item in results:
+            metadata = item.get("metadata", {})
+            expires_at = metadata.get("expires_at")
+            if expires_at:
+                try:
+                    expire_ts = datetime.datetime.fromisoformat(expires_at)
+                    if expire_ts < now:
+                        continue
+                except Exception:
+                    pass
+            valid_results.append(item["content"])
+
+        return valid_results[:k]
+
+
 memory_manager = MemoryManager(persist_dir="./knowledge_base/vector_store")
-
-

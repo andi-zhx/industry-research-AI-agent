@@ -198,7 +198,7 @@ class RecallHistoryTool(BaseTool):
             if not results:
                 return "No relevant historical insights found."
                 
-            return f"Found specific historical insights:\n{results}"
+            return "Found specific historical insights:\n" + "\n\n".join(results)
         except Exception as e:
             return f"Memory recall failed: {str(e)}"
 
@@ -262,7 +262,7 @@ class RAGSearchTool(BaseTool):
 
     def _run(self, query: str) -> str:
         try:
-            evidence = kb_manager.query_knowledge(query, n_results=5)
+            evidence = kb_manager.query_with_reasoning(query, n_results=5, max_rounds=2)
             instruction = """
             【重要指令】：
             使用上述信息回答时，必须在句尾标注来源，格式为 [来源: 文件名]。
