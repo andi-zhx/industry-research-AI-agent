@@ -25,3 +25,11 @@
 2. **每晚离峰增量重建（兜底路径）**：去重、失效清理、索引健康修复。
 
 该策略兼顾投研场景的实时性和长期索引质量。
+
+
+## 4. 启动稳定性修复（Windows/Chroma Panic）
+
+- 修复了 `chromadb.PersistentClient(...)` 在模块导入阶段直接初始化导致的启动崩溃问题。
+- 改为 **lazy init（延迟初始化）**：只有首次真正查询/入库时才创建 client/collection。
+- 当本地 Chroma 索引损坏触发 `pyo3_runtime.PanicException` 时，系统会自动将旧目录重命名为 `*_corrupted_时间戳` 并重建新库，避免应用直接退出。
+- 同样对 Memory 向量库增加了容错重建逻辑。

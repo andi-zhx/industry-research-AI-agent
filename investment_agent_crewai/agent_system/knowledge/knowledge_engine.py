@@ -1,6 +1,7 @@
 # knowledge_engine.py
 import os
 import re
+import shutil
 import datetime
 from typing import List, Tuple, Dict
 
@@ -20,8 +21,17 @@ collection = client.get_or_create_collection(name="industry_research_db", embedd
 
 
 class KnowledgeBaseManager:
+    """
+    知识库管理器（稳定版）
+    - 避免在 import 时初始化 Chroma，防止 Streamlit 启动阶段崩溃
+    - 对损坏的本地 Chroma 数据目录进行自动隔离并重建
+    """
+
     def __init__(self):
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=80)
+        self._client = None
+        self._collection = None
+        self._emb_fn = None
 
     @staticmethod
     def _extract_keywords(text: str) -> List[str]:
@@ -43,6 +53,39 @@ class KnowledgeBaseManager:
         numbers = re.findall(r"\d{4}|\d+\.\d+%|\d+%|\d+亿|\d+万", chunk)
         keywords = KnowledgeBaseManager._extract_keywords(chunk)[:15]
         return f"摘要:{first_sentence}\n关键词:{' '.join(keywords)}\n关键数字:{' '.join(numbers[:8])}".strip()
+
+    def _rotate_corrupted_store(self, base_path: str) -> str:
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        broken_path = f"{base_path}_corrupted_{ts}"
+        if os.path.exists(base_path):
+            shutil.move(base_path, broken_path)
+        os.makedirs(base_path, exist_ok=True)
+        return broken_path
+
+    def _ensure_collection(self):
+        if self._collection is not None:
+            return self._collection
+
+        if self._emb_fn is None:
+            self._emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="BAAI/bge-m3")
+
+        try:
+            self._client = chromadb.PersistentClient(path=CHROMA_DATA_PATH)
+            self._collection = self._client.get_or_create_collection(
+                name="industry_research_db", embedding_function=self._emb_fn
+            )
+            return self._collection
+        except BaseException as e:
+            # 兼容 pyo3_runtime.PanicException（可能不继承 Exception）
+            print(f"⚠️ Chroma 初始化失败，尝试隔离损坏库并重建: {e}")
+            rotated = self._rotate_corrupted_store(CHROMA_DATA_PATH)
+            print(f"🧹 已隔离旧库目录: {rotated}")
+
+            self._client = chromadb.PersistentClient(path=CHROMA_DATA_PATH)
+            self._collection = self._client.get_or_create_collection(
+                name="industry_research_db", embedding_function=self._emb_fn
+            )
+            return self._collection
 
     def ingest_pdf(self, file_path: str):
         print(f"📥 正在深度解析文件 (含表格): {file_path} ...")
@@ -79,6 +122,7 @@ class KnowledgeBaseManager:
                 }
             )
 
+        collection = self._ensure_collection()
         collection.add(documents=docs, ids=ids, metadatas=metadatas)
         print(f"✅ 已存入 {len(chunks)} 个知识片段（多表示索引）")
 
@@ -94,6 +138,7 @@ class KnowledgeBaseManager:
         return ranked
 
     def query_knowledge(self, query, n_results=5, keyword_filter=None):
+        collection = self._ensure_collection()
         results = collection.query(query_texts=[query], n_results=n_results * 3)
 
         docs = results.get("documents", [[]])[0]
@@ -115,12 +160,20 @@ class KnowledgeBaseManager:
         history = []
         current_query = query
 
+        for _ in range(max_rounds):
         for round_idx in range(max_rounds):
             evidence = self.query_knowledge(current_query, n_results=n_results)
             history.append((current_query, evidence))
 
             if evidence and len(evidence) > 400:
                 break
+
+            constraints = re.findall(r"\d{4}|市场规模|营收|利润|政策|上游|中游|下游", query)
+            if constraints:
+                current_query = f"{query} {' '.join(constraints)}"
+            else:
+                current_query = f"{query} 行业数据 龙头企业 政策"
+
 
             constraints = re.findall(r"\d{4}|市场规模|营收|利润|政策|上游|中游|下游", query)
             if constraints:
