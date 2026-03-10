@@ -1,32 +1,67 @@
 # rag/retriever.py
 
-from typing import List
+from __future__ import annotations
+
+import re
+from typing import List, Dict, Any
 from memory_system.vector_store.chroma_client import ChromaVectorStore
 
 
 class VectorRetriever:
     """
-    【原 knowledge_engine.py 中的 RAG 检索 + keyword filter】
+    混合检索器：向量检索 + 关键词重排
+    支持多表示索引：优先检索优化表示(retrieval_text)，返回原文(raw_content)
     """
 
     def __init__(self, vector_store: ChromaVectorStore):
         self.vector_store = vector_store
 
-    def retrieve(self, query: str, k: int = 5) -> List[str]:
-        results = self.vector_store.similarity_search_with_score(
+    @staticmethod
+    def _tokenize(query: str) -> List[str]:
+        tokens = re.findall(r"[\u4e00-\u9fffA-Za-z0-9]{2,}", query.lower())
+        return list(dict.fromkeys(tokens))
+
+    def _keyword_score(self, text: str, tokens: List[str]) -> float:
+        if not tokens:
+            return 0.0
+        low = text.lower()
+        hit = sum(1 for t in tokens if t in low)
+        return hit / len(tokens)
+
+    def retrieve(
+        self,
+        query: str,
+        k: int = 5,
+        where: Dict[str, Any] | None = None,
+    ) -> List[Dict[str, Any]]:
+        vector_results = self.vector_store.similarity_search_with_score(
             query=query,
-            k=k
+            k=max(k * 3, 10),
+            where=where,
         )
 
-        filtered_docs = []
+        tokens = self._tokenize(query)
+        scored = []
 
-        for doc, score in results:
-            # === 原 keyword_filter 逻辑复制 ===
-            if query.lower() in doc.page_content.lower():
-                filtered_docs.append(doc.page_content)
+        for doc, vector_distance in vector_results:
+            metadata = doc.metadata or {}
+            retrieval_text = doc.page_content or ""
+            raw_content = metadata.get("raw_content", retrieval_text)
 
-        if not filtered_docs:
-            # fallback：返回原始 TopK
-            filtered_docs = [doc.page_content for doc, _ in results]
+            keyword_score = self._keyword_score(retrieval_text, tokens)
+            vector_score = 1 / (1 + max(vector_distance, 0))
+            final_score = 0.7 * vector_score + 0.3 * keyword_score
 
-        return filtered_docs
+            scored.append(
+                {
+                    "content": raw_content,
+                    "retrieval_text": retrieval_text,
+                    "metadata": metadata,
+                    "score": round(final_score, 6),
+                    "vector_distance": float(vector_distance),
+                    "keyword_score": round(keyword_score, 6),
+                }
+            )
+
+        scored.sort(key=lambda x: x["score"], reverse=True)
+        return scored[:k]
